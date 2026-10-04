@@ -35,7 +35,7 @@ jobs:
         uses: pnpm/setup@v2
         with:
           version: 11
-          runtime: node@lts/*   # 或指定版本，如 node@22
+          runtime: node@22   # 或指定版本，如 node@22
           cache: true           # 自动开启依赖缓存
 
       # 严格按 lockfile 安装依赖
