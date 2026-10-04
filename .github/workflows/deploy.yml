@@ -2,20 +2,15 @@
 name: Deploy static content to Pages
 
 on:
-  # 仅在推送到默认分支时运行
   push:
     branches: ['main']
-
-  # 允许手动在 Actions 页面触发
   workflow_dispatch:
 
-# 设置 GITHUB_TOKEN 的权限
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# 允许一个并发部署
 concurrency:
   group: 'pages'
   cancel-in-progress: true
@@ -27,34 +22,40 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
+      # 1. 升级 checkout 到 v5 / 最新版本
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      # 使用官方新的 pnpm/setup 同时搞定 Node.js、pnpm 及缓存
-      - name: Install pnpm and Node.js
-        uses: pnpm/setup@v2
+      # 2. 安装 pnpm
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
         with:
-          version: 11
-          runtime: node@22   # 或指定版本，如 node@22
-          cache: true           # 自动开启依赖缓存
+          version: 10
 
-      # 严格按 lockfile 安装依赖
+      # 3. 设置 Node.js
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: lts/*
+          cache: 'pnpm'
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # 打包构建
       - name: Build
         run: pnpm run build
 
+      # 4. 升级 configure-pages 到 v6
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
+      # 5. 升级 upload-pages-artifact 到 v5
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
-          # 上传构建输出目录：常规 Vite 为 './dist'；如果是 VitePress 文档则改为 './.vitepress/dist'
           path: './dist'
 
+      # 6. 升级 deploy-pages 到 v5
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
