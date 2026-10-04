@@ -34,7 +34,7 @@ jobs:
       - name: Install pnpm and Node.js
         uses: pnpm/setup@v2
         with:
-          version: 9
+          version: 11
           runtime: node@lts/*   # 或指定版本，如 node@22
           cache: true           # 自动开启依赖缓存
 
