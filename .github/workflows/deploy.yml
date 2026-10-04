@@ -6,10 +6,10 @@ on:
   push:
     branches: ['main']
 
-  # 这个选项可以使你手动在 Action tab 页面触发工作流
+  # 允许手动在 Actions 页面触发
   workflow_dispatch:
 
-# 设置 GITHUB_TOKEN 的权限，以允许部署到 GitHub Pages
+# 设置 GITHUB_TOKEN 的权限
 permissions:
   contents: read
   pages: write
@@ -21,7 +21,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # 单次部署的工作描述
   deploy:
     environment:
       name: github-pages
@@ -29,23 +28,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - name: Set up Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/checkout@v4
+
+      # 使用官方新的 pnpm/setup 同时搞定 Node.js、pnpm 及缓存
+      - name: Install pnpm and Node.js
+        uses: pnpm/setup@v2
         with:
-          node-version: lts/*
-          cache: 'npm'
+          runtime: node@lts/*   # 或指定版本，如 node@22
+          cache: true           # 自动开启依赖缓存
+
+      # 严格按 lockfile 安装依赖
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
+
+      # 打包构建
       - name: Build
-        run: npm run build
+        run: pnpm run build
+
       - name: Setup Pages
-        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
+        uses: actions/configure-pages@v5
+
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
+        uses: actions/upload-pages-artifact@v3
         with:
-          # 上传 dist 文件夹
+          # 上传构建输出目录：常规 Vite 为 './dist'；如果是 VitePress 文档则改为 './.vitepress/dist'
           path: './dist'
+
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5
+        uses: actions/deploy-pages@v4
